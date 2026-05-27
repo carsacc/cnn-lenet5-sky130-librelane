@@ -1,34 +1,42 @@
-# tb_top_obi.sv — Guia del Testbench Completo CNN Top-Level
+# tb_top_spi.sv — Guia del Testbench Completo CNN Top-Level
 
 ## Ubicacion
 
 ```
-rtl/modules/tb_top_obi.sv
+rtl/modules/tb_top_spi.sv
 ```
 
-Todas las rutas de datos (`$readmemh`) son relativas a `rtl/sim/`. Tanto la compilacion como la ejecucion deben hacerse desde ese directorio.
+El testbench carga todos los datos (parametros, imagen y biases ajustados de Conv1), arranca la inferencia y lee el resultado **exclusivamente a traves del bus SPI**. No usa accesos de backdoor a las SRAM. Es el testbench que valida el chip endurecido en el flujo `spi-hardened-5` y el chip integrado `spi-chip-hier-28`.
+
+Las rutas de datos (`$readmemh`) son relativas a `rtl/sim/`. Tanto la compilacion como la ejecucion se hacen desde la raiz del proyecto.
 
 ---
 
 ## Compilacion y Ejecucion
 
-### Compilacion y ejecucion (desde la raiz del proyecto)
+### Atajo via Makefile
 
 ```bash
-bash rtl/sim/sim_cnn_top.sh
+make sim-spi NUM_IMAGES=3
 ```
 
-O manualmente:
+### Lanzamiento directo del script
+
+```bash
+bash rtl/sim/sim_cnn_top_spi.sh 3
+```
+
+### Invocacion manual
 
 ```bash
 RTL_DIR=rtl/modules
 MACRO_DIR=rtl/macros
 SIM_DIR=rtl/sim
 
-iverilog -g2012 -o ${SIM_DIR}/tb_top_obi.out \
-  ${RTL_DIR}/tb_top_obi.sv \
+iverilog -g2012 -DUSE_SPI_INTERFACE -o ${SIM_DIR}/tb_top_spi.out \
+  ${RTL_DIR}/tb_top_spi.sv \
   ${RTL_DIR}/cnn_top.v \
-  ${RTL_DIR}/host_interface.v \
+  ${RTL_DIR}/spi_interface.v \
   ${RTL_DIR}/layer_sequencer.v \
   ${RTL_DIR}/param_memory.v \
   ${RTL_DIR}/activation_buffer.v \
@@ -45,196 +53,147 @@ iverilog -g2012 -o ${SIM_DIR}/tb_top_obi.out \
   ${MACRO_DIR}/sky130_sram_1rw1r_32x1024_8/sky130_sram_1rw1r_32x1024_8.v \
   ${MACRO_DIR}/sky130_sram_1rw1r_32x2048_8/sky130_sram_1rw1r_32x2048_8.v
 
-cd ${SIM_DIR} && vvp tb_top_obi.out [+plusargs...]
+cd ${SIM_DIR} && vvp tb_top_spi.out [+plusargs...]
 ```
+
+> `-DUSE_SPI_INTERFACE` es obligatorio: hace que `cnn_top` instancie `spi_interface` en lugar de `host_interface`.
 
 ---
 
 ## Plusargs de Configuracion
 
-Todos los parametros son opcionales y se pasan en tiempo de ejecucion (sin recompilar):
+El testbench SPI se controla con tres plusargs opcionales:
 
 | Plusarg | Default | Descripcion |
 |---------|---------|-------------|
-| `+NUM_IMAGES=N` | 10 | Numero de imagenes a testear en Phase E (1-20) |
-| `+SHUFFLE=0/1` | 1 | 1 = orden aleatorio (Fisher-Yates), 0 = secuencial 0..N-1 |
-| `+SEED=N` | aleatorio | Semilla para el shuffle (reproducibilidad) |
-| `+TIMEOUT=N` | 2000000 | Maximo de polls OBI por inferencia antes de declarar timeout |
-| `+STOP_ON_FAIL=0/1` | 0 | 1 = abortar simulacion al primer fallo |
-| `+DUMP_VCD=0/1` | 0 | 1 = generar `tb_top_obi.vcd` en `rtl/sim/` |
-| `+CLK_PERIOD_NS=N` | 10 | Periodo de reloj en ns (10 = 100 MHz, 5 = 200 MHz) |
-| `+FREQ_SWEEP=0/1` | 0 | 1 = activar Phase F (barrido de frecuencias) |
-| `+FREQ_MIN_NS=N` | 4 | Periodo minimo del barrido (4 ns = 250 MHz) |
-| `+FREQ_MAX_NS=N` | 20 | Periodo maximo del barrido (20 ns = 50 MHz) |
-| `+FREQ_STEP_NS=N` | 2 | Decremento del periodo en cada paso del barrido |
+| `+NUM_IMAGES=N` | 3 | Numero de imagenes a procesar en Phase B (1-20) |
+| `+TIMEOUT=N` | 5000000 | Maximo de polls SPI por inferencia antes de declarar timeout |
+| `+DUMP_VCD=0/1` | 0 | 1 = generar `tb_top_spi.vcd` en `rtl/sim/` |
 
 ---
 
 ## Ejemplos de Uso
 
 ```bash
-# Test rapido: 3 imagenes secuenciales, 100 MHz
-vvp tb_top_obi.out +NUM_IMAGES=3 +SHUFFLE=0
+# Test rapido: 3 imagenes (default)
+make sim-spi
 
-# Regresion completa: 20 imagenes en orden aleatorio reproducible
-vvp tb_top_obi.out +NUM_IMAGES=20 +SHUFFLE=1 +SEED=42
+# Regresion: 20 imagenes
+make sim-spi NUM_IMAGES=20
 
-# Reloj personalizado: 200 MHz
-vvp tb_top_obi.out +NUM_IMAGES=5 +CLK_PERIOD_NS=5
+# Debug con VCD
+vvp rtl/sim/tb_top_spi.out +NUM_IMAGES=1 +DUMP_VCD=1
 
-# Barrido de frecuencias: 50 MHz a 250 MHz en pasos de 4 ns
-vvp tb_top_obi.out +NUM_IMAGES=1 +FREQ_SWEEP=1 \
-  +FREQ_MIN_NS=4 +FREQ_MAX_NS=20 +FREQ_STEP_NS=4
+# Post-PnR GLS con la netlist SPI (vease apendice de comandos)
+make gls-postpnr RUN=spi-hardened-5
 
-# Debug: 1 imagen, parar al primer fallo, generar VCD
-vvp tb_top_obi.out +NUM_IMAGES=1 +STOP_ON_FAIL=1 +DUMP_VCD=1
-
-# Post-sintesis con netlist (compilar con el netlist en vez del RTL):
-# iverilog -g2012 -o tb_top_obi_gl.out \
-#   ../modules/tb_top_obi.sv netlist/cnn_top_synth.v ...
-# vvp tb_top_obi_gl.out +FREQ_SWEEP=1 +FREQ_MIN_NS=8
+# Post-PnR + SDF (CVC64, corner TT)
+make gls-sdf RUN=spi-hardened-5 CORNER=tt
 ```
+
+---
+
+## Protocolo SPI
+
+Todas las transacciones son frames SPI de **56 bits** (Mode 0, CPOL=0, CPHA=0, MSB-first):
+
+```
+| cmd (8b) | addr (16b) | data/rsvd (32b) |
+```
+
+- `cmd = 0x01` → WRITE, el campo data lleva los 32 bits a escribir.
+- `cmd = 0x02` → READ, el campo data se ignora; la respuesta se obtiene en la **siguiente** transaccion (lectura pipelined).
+- La primera lectura a una direccion devuelve datos stale o cero — el master descarta esa palabra y conserva la segunda.
+
+El testbench encapsula este protocolo en las tareas `spi_write(addr, data)`, `spi_read_data(addr, out)` y `spi_csr_read(off, out)`.
 
 ---
 
 ## Fases de Test
 
-El testbench ejecuta 6 fases secuencialmente (A-F) y al final imprime un resumen (G):
+### Phase A — SPI Data-Path Sanity Check
 
-### Phase A — Host Data Readback
+Verifica el camino de datos del SPI con cuatro escrituras y lecturas back-to-back:
 
-Verifica que la CPU host puede leer datos internos via OBI tras una inferencia completa (image_0, label esperado = 7):
+| Sub-test | Direccion (byte) | Region | Patron |
+|----------|------------------|--------|--------|
+| A1 | `0x0000` | param_memory | `0xDEADBEEF` |
+| A2 | `0x2000` | activation buf A-region | `0xCAFEBABE` |
+| A3 | `0x4000` | activation buf B-region | `0x12345678` |
+| A4 | `0x6000` | CSR CTRL | `0x00000001` (luego limpia a 0) |
 
-- **FC logits**: lee 3 words desde buf_B (addrs 104-106, OBI 0x41A0-0x41A8), compara los 10 bytes contra `logits_image_0.hex` con tolerancia +-2 LSB
-- **GAP values**: lee 32 words desde buf_B (addrs 72-103, OBI 0x4120-0x419C), compara byte 0 de cada word contra `golden/gap_image_0.hex` con tolerancia +-2 LSB
-- **Conv3 spot-check**: lee 8 words desde el inicio de buf_B, verifica que no son todos cero
+Confirma que el decodificador del `spi_interface`, los muxes de memoria y la lectura pipelined funcionan en las cuatro regiones.
 
-> La tolerancia +-2 LSB existe porque el hardware usa truncamiento en la division del GAP, mientras que el modelo Python usa round-half-to-even. Ambos producen la misma clasificacion final.
+### Phase B — Multi-Image Inference via SPI
 
-### Phase B — Back-to-Back Inference
+Para cada imagen `0..NUM_IMAGES-1`:
 
-Ejecuta 3 inferencias consecutivas (image_0, image_1, image_2) **sin hacer reset** entre ellas. Solo se hace reset antes de la primera. Verifica que la FSM del layer_sequencer vuelve a IDLE limpiamente y no hay contaminacion de estado entre inferencias.
+1. Reset completo (full reset entre imagenes — no hay back-to-back en este TB).
+2. `load_all_data_spi(img_id)`:
+   - Escribe los 2048 words de `PARAM_MEM_32x2048.hex` en param_memory.
+   - Limpia los 1024 words de la activation buffer.
+   - Carga los 196 words de `image_N.hex` en buf_A (4 pixeles por palabra para Conv1).
+   - Ajusta los biases de Conv1 sumando `-input_zp * sum(weights)` por canal (compensa que el MAC trata pixeles como unsigned).
+3. `run_inference_spi`: CTRL=1 → poll STATUS hasta `done` → lee RESULT → CTRL=0.
+4. Compara la clase predicha contra `image_N_label.txt`.
 
-### Phase C — Reset Mid-Inference
+Al final imprime accuracy total y numero de imagenes correctamente clasificadas.
 
-1. Inicia inferencia con image_0
-2. Espera ~1000 ciclos (mitad de Conv1)
-3. Aserta `reset` durante 5 ciclos
-4. Verifica CSRs en estado por defecto (STATUS=0, RESULT=0)
-5. Recarga datos, hace reset limpio, ejecuta inferencia completa
-6. Verifica resultado correcto (label=7)
-
-### Phase D — CSR Corner Cases
-
-Pruebas del protocolo OBI y registros CSR:
-
-| Sub-test | Descripcion |
-|----------|-------------|
-| D1 | Escritura al registro STATUS (read-only) — debe quedar inalterado |
-| D2 | Escritura al registro RESULT (read-only) — debe quedar inalterado |
-| D3 | Lectura de direccion CSR reservada (0x600C) — debe retornar 0 |
-| D4 | 3 lecturas CSR consecutivas back-to-back — todas deben ser validas |
-| D5 | Escritura a CTRL con byte-enable=0001 — solo byte 0 debe afectarse |
-| D6 | Integridad de param_memory tras inferencia — snapshot de 6 words antes y despues |
-
-### Phase E — Multi-Image Inference Loop
-
-Para cada imagen en el conjunto (opcionalmente shuffled):
-
-1. Carga parametros + imagen via backdoor
-2. Ajusta biases de Conv1 (compensacion input_zp)
-3. Reset → CTRL=1 → poll STATUS → lee RESULT
-4. Compara contra label esperado (`image_N_label.txt`)
-5. Registra ciclos por inferencia (min/avg/max)
-
-Al final reporta accuracy (%) y estadisticas de ciclos.
-
-### Phase F — Frequency Sweep (opcional)
-
-Solo se ejecuta con `+FREQ_SWEEP=1`. Ejecuta image_0 a frecuencias decrecientes:
-
-1. Empieza en `FREQ_MAX_NS` (frecuencia baja, segura)
-2. Decrementa el periodo en `FREQ_STEP_NS` por cada paso
-3. Para cada frecuencia: carga datos, reset, infiere, verifica result=7
-4. Reporta ultima frecuencia que pasa y primera que falla
-
-**Nota importante**: los resultados del frequency sweep son **informativos** y no afectan al veredicto final PASS/FAIL. Para RTL behavioral (zero-delay), todas las frecuencias razonables pasan. Este test cobra sentido con netlists post-sintesis con SDF back-annotation.
-
-> En el modelo behavioral, a periodos muy cortos (< 6 ns) el delay fijo `#1` del testbench ocupa una fraccion significativa del periodo de reloj, lo cual puede causar fallos artificiales.
-
-### Phase G — Summary
-
-Ejemplo de salida:
+### Resumen
 
 ```
-================================================================
-COMPREHENSIVE TEST SUMMARY
-================================================================
-
-Phase A — Host Readback:        PASS (44/44 checks)
-Phase B — Back-to-Back:         PASS (3/3 inferences)
-Phase C — Reset Mid-Inference:  PASS (3/3 checks)
-Phase D — CSR Corner Cases:     PASS (6/6 checks)
-Phase E — Multi-Image (N=20):   PASS 20/20 (100.0% accuracy)
-Phase F — Freq Sweep:           SKIPPED
-
-FINAL: 76 PASS, 0 FAIL out of 76 total checks
-
-ALL TESTS PASSED
-================================================================
+========================================
+  TOTAL PASS: 6 / 6
+  Inference accuracy: 2 / 2 images correct
+  ALL TESTS PASSED
+========================================
 ```
 
 ---
 
-## Mapa de Memoria OBI (referencia)
+## Mapa de Memoria SPI (referencia)
 
-| Region | Base OBI | Tamanyo | Descripcion |
-|--------|----------|---------|-------------|
-| param_memory | 0x0000 | 8 KB | Pesos, biases, parametros de cuantizacion |
-| buf A-region | 0x2000 | 2 KB | Buffer de activaciones (words 0-511) |
-| buf B-region | 0x4000 | 2 KB | Buffer de activaciones (words 512-1023) |
-| CSR | 0x6000 | 16 B | Registros de control/estado |
+El mapa lo decodifica `spi_interface` a partir de `addr[14:13]`. Es identico al del OBI pero accedido en frames SPI de 56 bits:
+
+| Region | Base | Tamanyo | Descripcion |
+|--------|------|---------|-------------|
+| param_memory | `0x0000` | 8 KB | Pesos, biases, parametros de cuantizacion |
+| buf A-region | `0x2000` | 2 KB | Buffer de activaciones (words 0-511) |
+| buf B-region | `0x4000` | 2 KB | Buffer de activaciones (words 512-1023) |
+| CSR | `0x6000` | 16 B | Registros de control/estado |
 
 **Registros CSR:**
 
 | Offset | Nombre | R/W | Descripcion |
 |--------|--------|-----|-------------|
-| 0x6000 | CTRL | R/W | Bit 0 = start (CPU escribe 1 para iniciar, 0 para liberar memorias) |
-| 0x6004 | STATUS | RO | Bit 0 = done, Bit 1 = computing_valid |
-| 0x6008 | RESULT | RO | Bits [3:0] = clase predicha (0-9) |
-| 0x600C | — | RO | Reservado (retorna 0) |
-
-**Direcciones de datos internos en buf_B (tras inferencia):**
-
-| Dato | Word addr | OBI addr | Formato |
-|------|-----------|----------|---------|
-| Conv3 output | 0-71 | 0x4000-0x411C | 4 bytes/word empaquetados por canal |
-| GAP output | 72-103 | 0x4120-0x419C | 1 byte/word (byte 0), 32 canales |
-| FC logits | 104-106 | 0x41A0-0x41A8 | 4 bytes/word, 10 clases en 3 words |
+| `0x6000` | CTRL | R/W | Bit 0 = start (escribir 1 para iniciar, 0 para liberar memorias) |
+| `0x6004` | STATUS | RO | Bit 0 = done, Bit 1 = computing_valid |
+| `0x6008` | RESULT | RO | Bits [3:0] = clase predicha (0-9) |
+| `0x600C` | — | RO | Reservado (retorna 0) |
 
 ---
 
 ## Datos Necesarios
 
-El testbench requiere los siguientes ficheros en `datos_hex_std/` (relativo a la raiz del proyecto, accedido como `../../datos_hex_std/` desde `rtl/sim/`):
+El testbench requiere los siguientes ficheros en `datos_hex_std/` (regenerables con `make train`):
 
 ```
 datos_hex_std/
-  PARAM_MEM_32x2048.hex          # Parametros del modelo (2048 words)
-  logits_image_0.hex             # Golden logits image_0 (10 bytes)
-  golden/
-    gap_image_0.hex              # Golden GAP image_0 (32 bytes)
+  PARAM_MEM_32x2048.hex                # Parametros del modelo (2048 words)
+  conv1_weights.hex                    # Necesario para calcular el ajuste de biases
+  model_input_zero_point.hex           # input_zp usado en el ajuste de biases
   test_images/
-    image_0.hex ... image_19.hex       # 20 imagenes MNIST (784 bytes cada una)
-    image_0_label.txt ... image_19_label.txt  # Labels esperados (1 digito hex)
+    image_0.hex ... image_19.hex            # 20 imagenes MNIST (196 words cada una)
+    image_0_label.txt ... image_19_label.txt # Labels esperados
 ```
 
 ---
 
 ## Notas Tecnicas
 
-- **SRAM VERBOSE=0**: el testbench desactiva las trazas debug de las instancias SRAM Sky130 via `defparam`, eliminando millones de lineas de output
-- **Tolerancia +-2 LSB**: la comparacion de logits y GAP contra golden acepta diferencias de hasta 2 unidades para compensar diferencias de redondeo HW vs Python
-- **Fisher-Yates shuffle**: implementado con `$urandom` para aleatorizar el orden de imagenes; reproducible con `+SEED=N`
-- **Ajuste de biases Conv1**: compensa la diferencia entre input_zp=17 (sustraido en Python) y el MAC del hardware que trata pixeles como unsigned. Se aplica automaticamente antes de cada inferencia
-- **Reloj configurable**: usa `real half_period` con `always #(half_period)`, permitiendo cambiar la frecuencia en runtime sin recompilar
+- **Frecuencia del SPI**: el master genera SCLK a 1 MHz por defecto (parametro `SPI_HALF = 500 ns`). El reloj del nucleo va a 15 MHz (`CLK_PERIOD = 66.67 ns`).
+- **Inter-transaction gap**: 2 us entre transacciones para que el slave registre cs_n inactivo (`CS_GAP = 2000`).
+- **Lectura pipelined**: la primera lectura a cualquier direccion descarta la palabra anterior del pipeline. El testbench hace dos READs consecutivos y se queda con el segundo.
+- **Ajuste de biases Conv1**: igual que en OBI; el TB lo aplica via SPI antes de cada inferencia. Compensa la diferencia entre el modelo Python (`acc = sum((px - input_zp) * w) + bias`) y el hardware (`acc = sum(px * w) + bias_adj`).
+- **SRAM VERBOSE=0**: el TB desactiva las trazas debug de las instancias SRAM Sky130 via `defparam`.
+- **GLS post-PnR / SDF**: el mismo testbench compila contra la netlist post-PnR cuando se invoca con `-DPOSTSYNTH -DFUNCTIONAL`. Para SDF anotado, los targets `gls-postpnr` y `gls-sdf` del Makefile lo hacen automaticamente.
