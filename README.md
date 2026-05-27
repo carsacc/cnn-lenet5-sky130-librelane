@@ -181,6 +181,3 @@ La regeneración de las macros SRAM con OpenRAM y Xyce no es necesaria para repr
 - [`docs/PARAM_MEM_DETAILED_MAP.txt`](docs/PARAM_MEM_DETAILED_MAP.txt) — Mapa detallado de la Param Memory.
 - [`docs/TB_CNN_TOP_FULL_GUIDE.md`](docs/TB_CNN_TOP_FULL_GUIDE.md) — Guía del testbench top-level.
 
-## Licencia
-
-El proyecto utiliza el PDK SkyWater 130 nm bajo licencia [Apache 2.0](https://github.com/google/skywater-pdk). El RTL, los scripts y la infraestructura propia del TFM se distribuyen bajo la misma licencia.
