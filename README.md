@@ -32,8 +32,8 @@ El proyecto recorre el flujo completo **RTL-to-GDSII** sobre el PDK abierto **Sk
 | Reloj | 15 MHz (66.67 ns) |
 | Interfaz host | OBI v1.0 (32 bits) o SPI (selección en tiempo de compilación) |
 | Aritmética | INT8 cuantizada, acumuladores 32 bits |
-| MACs paralelos | 4 (modos OC-parallel e IC-parallel) |
-| SRAM interna | 12 KB (8 KB parámetros + 4 KB activaciones, OpenRAM) |
+| MACs paralelos | 4 |
+| SRAM interna | 12 KB (8 KB parámetros + 4 KB activaciones, OpenRAM)|
 | Latencia inferencia | ~470 k ciclos (~31 ms @ 15 MHz) |
 | Núcleo endurecido | 1700 × 1700 µm |
 | Chip con padring | 2500 × 2500 µm |
@@ -79,17 +79,17 @@ Los `runs/` no se versionan por tamaño pero son reproducibles bit a bit con los
 
 ## Reproducción del flujo
 
-### Prerrequisitos
+### Dependencias
 
 - Linux x86_64 con Python 3.10+, Make, Git e Icarus Verilog instalados.
 - **Nix** para entrar al `nix-shell` de LibreLane.
 - **LibreLane v3.0.0** clonado en local (`git clone --branch 3.0.0 https://github.com/librelane/librelane.git`).
-- **sky130A** instalado bajo `~/.ciel/sky130A` (lo provisiona LibreLane la primera vez que se entra a su nix-shell).
-- Variable `PDK_ROOT` apuntando al directorio que contiene `sky130A/` (por defecto `~/.ciel`).
 
 ### Pasos
 
 ```bash
+# 0. Instalar dependencias en caso de necesitarlo.
+
 # 1. Clonar el repositorio
 git clone https://github.com/carsacc/cnn-lenet5-sky130-librelane.git
 cd cnn-lenet5-sky130-librelane
