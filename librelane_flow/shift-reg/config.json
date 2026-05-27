@@ -1,0 +1,47 @@
+{
+  "DESIGN_NAME": "shift_reg",
+  "VERILOG_FILES": ["dir::shift_reg.v"],
+  "VERILOG_DEFINES": ["USE_POWER_PINS", "SYNTHESIS"],
+
+  "CLOCK_PORT": "clk",
+  "CLOCK_PERIOD": 10.0,
+  "BASE_SDC_FILE": "dir::shift_reg.sdc",
+  "PNR_SDC_FILE": "dir::shift_reg.sdc",
+  "SIGNOFF_SDC_FILE": "dir::shift_reg.sdc",
+
+  "PDK": "sky130A",
+  "STD_CELL_LIBRARY": "sky130_fd_sc_hd",
+
+  "VDD_NETS": ["vccd1"],
+  "GND_NETS": ["vssd1"],
+  "VDD_PIN": "vccd1",
+  "GND_PIN": "vssd1",
+  "STD_CELL_POWER_PINS": ["VPWR", "VPB"],
+  "STD_CELL_GROUND_PINS": ["VGND", "VNB"],
+
+  "FP_SIZING": "absolute",
+  "DIE_AREA": "0 0 80 80",
+  "PL_TARGET_DENSITY_PCT": 30,
+  "GPL_CELL_PADDING": 2,
+  "DPL_CELL_PADDING": 2,
+
+  "DRT_THREADS": 4,
+  "STA_THREADS": 4,
+  "KLAYOUT_DRC_THREADS": 4,
+
+  "SYNTH_STRATEGY": "AREA 0",
+  "RUN_CTS": true,
+  "RUN_POST_GPL_DESIGN_REPAIR": true,
+  "RUN_POST_CTS_RESIZER_TIMING": true,
+  "RUN_HEURISTIC_DIODE_INSERTION": true,
+
+  "MAGIC_CAPTURE_ERRORS": false,
+  "RUN_MAGIC_DRC": false,
+  "RUN_MAGIC_WRITE_LEF": true,
+  "RUN_MAGIC_STREAMOUT": false,
+  "PRIMARY_GDSII_STREAMOUT_TOOL": "klayout",
+  "RUN_KLAYOUT_XOR": false,
+  "RUN_LVS": true,
+
+  "KLAYOUT_CONFLICT_RESOLUTION": "OverwriteCell"
+}

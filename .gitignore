@@ -1,0 +1,34 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+python/log
+
+# Simulation waveform files
+*.vcd
+*.wlf
+*.out
+*.fst
+
+# Simulation artifacts
+rtl/sim/cnn_top_sdf_tt
+rtl/sim/*.log
+rtl/sim/*.sdf
+rtl/sim/debug_*/
+transcript
+rtl/sim/modelsim/
+
+# Debug hex outputs
+rtl/sim/*.hex
+
+# Dataset
+mnist_data/
+python/mnist_data/
+python/mnist_cnn/rawdata/
+MNIST/
+
+# LibreLane runs
+librelane_flow/**/runs/
+
+# Old SRAM compiler outputs
+librelane_flow/cnn_top/sram/

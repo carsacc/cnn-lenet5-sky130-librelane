@@ -1,0 +1,62 @@
+[2026-03-12 09:40:36.429494] |==============================================================================|
+[2026-03-12 09:40:36.429748] |=========                      OpenRAM v1.2.49                       =========|
+[2026-03-12 09:40:36.429831] |=========                                                            =========|
+[2026-03-12 09:40:36.429895] |=========               VLSI Design and Automation Lab               =========|
+[2026-03-12 09:40:36.429955] |=========        Computer Science and Engineering Department         =========|
+[2026-03-12 09:40:36.430012] |=========            University of California Santa Cruz             =========|
+[2026-03-12 09:40:36.430067] |=========                                                            =========|
+[2026-03-12 09:40:36.430152] |=========          Usage help: openram-user-group@ucsc.edu           =========|
+[2026-03-12 09:40:36.430212] |=========        Development help: openram-dev-group@ucsc.edu        =========|
+[2026-03-12 09:40:36.430266] |=========                See LICENSE for license info                =========|
+[2026-03-12 09:40:36.430318] |==============================================================================|
+[2026-03-12 09:40:36.430384] ** Start: 03/12/2026 09:40:36
+[2026-03-12 09:40:36.430443] Technology: sky130
+[2026-03-12 09:40:36.430501] Total size: 32768 bits
+[2026-03-12 09:40:36.521734] WARNING: file globals.py: line 640: Characterizing large memories (32768) will have a large run-time.
+
+[2026-03-12 09:40:36.521823] Word size: 32
+Words: 1024
+Banks: 1
+[2026-03-12 09:40:36.521890] Write size: 8
+[2026-03-12 09:40:36.521949] RW ports: 1
+R-only ports: 1
+W-only ports: 0
+[2026-03-12 09:40:36.522006] DRC/LVS/PEX is only run on the top-level design to save run-time (inline_lvsdrc=True to do inline checking).
+[2026-03-12 09:40:36.522062] DRC/LVS/PEX is disabled (check_lvsdrc=True to enable).
+[2026-03-12 09:40:36.522137] Performing simulation-based characterization with Xyce
+[2026-03-12 09:40:36.522197] Trimming netlist to speed up characterization (trim_netlist=False to disable).
+[2026-03-12 09:40:36.522253] Words per row: None
+[2026-03-12 09:40:36.522316] Output files are: 
+[2026-03-12 09:40:36.522371] /home/carlos/sram_CNN_TFM/sky130_sram_1rw1r_32x1024_8/sky130_sram_1rw1r_32x1024_8.lvs
+[2026-03-12 09:40:36.522425] /home/carlos/sram_CNN_TFM/sky130_sram_1rw1r_32x1024_8/sky130_sram_1rw1r_32x1024_8.sp
+[2026-03-12 09:40:36.522478] /home/carlos/sram_CNN_TFM/sky130_sram_1rw1r_32x1024_8/sky130_sram_1rw1r_32x1024_8.v
+[2026-03-12 09:40:36.522530] /home/carlos/sram_CNN_TFM/sky130_sram_1rw1r_32x1024_8/sky130_sram_1rw1r_32x1024_8.lib
+[2026-03-12 09:40:36.522593] /home/carlos/sram_CNN_TFM/sky130_sram_1rw1r_32x1024_8/sky130_sram_1rw1r_32x1024_8.py
+[2026-03-12 09:40:36.522648] /home/carlos/sram_CNN_TFM/sky130_sram_1rw1r_32x1024_8/sky130_sram_1rw1r_32x1024_8.html
+[2026-03-12 09:40:36.522701] /home/carlos/sram_CNN_TFM/sky130_sram_1rw1r_32x1024_8/sky130_sram_1rw1r_32x1024_8.log
+[2026-03-12 09:40:36.522753] /home/carlos/sram_CNN_TFM/sky130_sram_1rw1r_32x1024_8/sky130_sram_1rw1r_32x1024_8.lef
+[2026-03-12 09:40:36.522806] /home/carlos/sram_CNN_TFM/sky130_sram_1rw1r_32x1024_8/sky130_sram_1rw1r_32x1024_8.gds
+[2026-03-12 09:50:48.035746] ** Submodules: 611.5 seconds
+[2026-03-12 09:50:48.099881] ** Placement: 0.1 seconds
+[2026-03-12 12:17:43.038203] ** Routing: 8814.9 seconds
+[2026-03-12 12:17:43.152378] ** Verification: 0.0 seconds
+[2026-03-12 12:17:43.152558] ** SRAM creation: 9426.6 seconds
+[2026-03-12 12:17:43.152683] SP: Writing to /home/carlos/sram_CNN_TFM/sky130_sram_1rw1r_32x1024_8/sky130_sram_1rw1r_32x1024_8.sp
+[2026-03-12 12:17:44.251843] ** Spice writing: 1.1 seconds
+[2026-03-12 12:17:44.251977] DELAY: Writing stimulus...
+[2026-03-12 12:17:53.960621] ** DELAY: 9.7 seconds
+[2026-03-12 12:17:54.802564] GDS: Writing to /home/carlos/sram_CNN_TFM/sky130_sram_1rw1r_32x1024_8/sky130_sram_1rw1r_32x1024_8.gds
+[2026-03-12 12:17:58.259248] ** GDS: 3.5 seconds
+[2026-03-12 12:17:58.259429] LEF: Writing to /home/carlos/sram_CNN_TFM/sky130_sram_1rw1r_32x1024_8/sky130_sram_1rw1r_32x1024_8.lef
+[2026-03-12 12:17:58.304821] ** LEF: 0.0 seconds
+[2026-03-12 12:17:58.304923] LVS: Writing to /home/carlos/sram_CNN_TFM/sky130_sram_1rw1r_32x1024_8/sky130_sram_1rw1r_32x1024_8.lvs.sp
+[2026-03-12 12:17:59.100663] ** LVS writing: 0.8 seconds
+[2026-03-12 12:17:59.100851] LIB: Characterizing... 
+[2026-03-15 03:00:56.570730] ** Characterization: 225777.5 seconds
+[2026-03-15 03:00:56.571129] Config: Writing to /home/carlos/sram_CNN_TFM/sky130_sram_1rw1r_32x1024_8/sky130_sram_1rw1r_32x1024_8.py
+[2026-03-15 03:00:56.571255] ** Config: 0.0 seconds
+[2026-03-15 03:00:56.572762] Datasheet: Writing to /home/carlos/sram_CNN_TFM/sky130_sram_1rw1r_32x1024_8/sky130_sram_1rw1r_32x1024_8.html
+[2026-03-15 03:00:56.575057] ** Datasheet: 0.0 seconds
+[2026-03-15 03:00:56.575187] Verilog: Writing to /home/carlos/sram_CNN_TFM/sky130_sram_1rw1r_32x1024_8/sky130_sram_1rw1r_32x1024_8.v
+[2026-03-15 03:00:56.575557] ** Verilog: 0.0 seconds
+[2026-03-15 03:00:57.700061] ** End: 235221.3 seconds

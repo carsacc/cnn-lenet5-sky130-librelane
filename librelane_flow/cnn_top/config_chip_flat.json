@@ -1,0 +1,307 @@
+{
+  "DESIGN_NAME": "chip_top_spi",
+  "VERILOG_FILES": [
+    "dir::macros/sky130_ef_io_stubs.v",
+    "dir::macros/sky130_sram_1rw1r_32x2048_8_stub.v",
+    "dir::macros/sky130_sram_1rw1r_32x1024_8_stub.v",
+    "dir::rtl_syn/mac_unit.v",
+    "dir::rtl_syn/post_proc_unit.v",
+    "dir::rtl_syn/gap_unit.v",
+    "dir::rtl_syn/argmax_unit.v",
+    "dir::rtl_syn/compute_core_parallel.v",
+    "dir::rtl_syn/compute_top.v",
+    "dir::rtl_syn/data_bus.v",
+    "dir::rtl_syn/line_buffer.v",
+    "dir::rtl_syn/param_memory.v",
+    "dir::rtl_syn/activation_buffer.v",
+    "dir::rtl_syn/conv_layer_ctrl.v",
+    "dir::rtl_syn/gap_fc_layer_ctrl.v",
+    "dir::rtl_syn/layer_sequencer.v",
+    "dir::rtl_syn/host_interface.v",
+    "dir::rtl_syn/spi_interface.v",
+    "dir::rtl_syn/cnn_top.v",
+    "dir::rtl_syn/chip_top_spi_flat.v"
+  ],
+  "VERILOG_DEFINES": [
+    "USE_POWER_PINS",
+    "SYNTHESIS",
+    "USE_SPI_INTERFACE"
+  ],
+  "CLOCK_NET": "clk_core",
+  "CLOCK_PORT": "pad_clk",
+  "CLOCK_PERIOD": 66.67,
+  "BASE_SDC_FILE": "dir::chip_spi.sdc",
+  "PNR_SDC_FILE": "dir::chip_spi.sdc",
+  "SIGNOFF_SDC_FILE": "dir::chip_spi.sdc",
+  "PDK": "sky130A",
+  "STD_CELL_LIBRARY": "sky130_fd_sc_hd",
+  "VDD_NETS": [
+    "vccd1"
+  ],
+  "GND_NETS": [
+    "vssd1"
+  ],
+  "VDD_PIN": "vccd1",
+  "GND_PIN": "vssd1",
+  "STD_CELL_POWER_PINS": [
+    "VPWR",
+    "VPB"
+  ],
+  "STD_CELL_GROUND_PINS": [
+    "VGND",
+    "VNB"
+  ],
+  "MACROS": {
+    "sky130_sram_1rw1r_32x2048_8": {
+      "lef": [
+        "dir::macros/sky130_sram_1rw1r_32x2048_8/sky130_sram_1rw1r_32x2048_8.lef"
+      ],
+      "gds": [
+        "dir::macros/sky130_sram_1rw1r_32x2048_8/sky130_sram_1rw1r_32x2048_8.gds"
+      ],
+      "lib": {
+        "nom_*": [
+          "dir::macros/sky130_sram_1rw1r_32x2048_8/sky130_sram_1rw1r_32x2048_8_TT_1p8V_25C.lib"
+        ],
+        "min_*": [
+          "dir::macros/sky130_sram_1rw1r_32x2048_8/sky130_sram_1rw1r_32x2048_8_FF_1p95V_-40C.lib"
+        ],
+        "max_*": [
+          "dir::macros/sky130_sram_1rw1r_32x2048_8/sky130_sram_1rw1r_32x2048_8_SS_1p6V_100C.lib"
+        ]
+      },
+      "spice": [
+        "dir::macros/sky130_sram_1rw1r_32x2048_8/sky130_sram_1rw1r_32x2048_8.sp"
+      ],
+      "instances": {
+        "u_core.u_param.sram": {
+          "location": [
+            789,
+            1176
+          ],
+          "orientation": "N"
+        }
+      }
+    },
+    "sky130_sram_1rw1r_32x1024_8": {
+      "lef": [
+        "dir::macros/sky130_sram_1rw1r_32x1024_8/sky130_sram_1rw1r_32x1024_8.lef"
+      ],
+      "gds": [
+        "dir::macros/sky130_sram_1rw1r_32x1024_8/sky130_sram_1rw1r_32x1024_8.gds"
+      ],
+      "lib": {
+        "nom_*": [
+          "dir::macros/sky130_sram_1rw1r_32x1024_8/sky130_sram_1rw1r_32x1024_8_TT_1p8V_25C.lib"
+        ],
+        "min_*": [
+          "dir::macros/sky130_sram_1rw1r_32x1024_8/sky130_sram_1rw1r_32x1024_8_FF_1p95V_-40C.lib"
+        ],
+        "max_*": [
+          "dir::macros/sky130_sram_1rw1r_32x1024_8/sky130_sram_1rw1r_32x1024_8_SS_1p6V_100C.lib"
+        ]
+      },
+      "spice": [
+        "dir::macros/sky130_sram_1rw1r_32x1024_8/sky130_sram_1rw1r_32x1024_8.sp"
+      ],
+      "instances": {
+        "u_core.u_buf.sram": {
+          "location": [
+            1198,
+            300
+          ],
+          "orientation": "FS"
+        }
+      }
+    }
+  },
+  "PAD_LEFS": [
+    "pdk_dir::libs.ref/sky130_fd_io/lef/sky130_ef_io.lef"
+  ],
+  "PAD_GDS": [
+    "pdk_dir::libs.ref/sky130_fd_io/gds/sky130_ef_io.gds",
+    "pdk_dir::libs.ref/sky130_fd_io/gds/sky130_fd_io.gds"
+  ],
+  "PAD_VERILOG_MODELS": [
+    "dir::macros/sky130_ef_io_stubs.v"
+  ],
+  "PAD_SPICE_MODELS": [
+    "pdk_dir::libs.ref/sky130_fd_io/cdl/sky130_ef_io.cdl",
+    "pdk_dir::libs.ref/sky130_fd_io/spice/sky130_fd_io.spice"
+  ],
+  "PAD_CDLS": [
+    "pdk_dir::libs.ref/sky130_fd_io/cdl/sky130_ef_io.cdl"
+  ],
+  "EXTRA_LIBS": [
+    "pdk_dir::libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_tt_tt_025C_1v80_3v30.lib"
+  ],
+  "PAD_CFG": "dir::fix_padring.tcl",
+  "PAD_SITE_NAME": "sky130_io",
+  "PAD_CORNER_SITE_NAME": "sky130_io_corner",
+  "PAD_FAKE_SITES": {
+    "sky130_io": [
+      1.0,
+      197.965
+    ],
+    "sky130_io_corner": [
+      200.0,
+      204.0
+    ]
+  },
+  "PAD_CORNER": [
+    "sky130_ef_io__corner_pad"
+  ],
+  "PAD_FILLERS": [
+    "sky130_ef_io__com_bus_slice_20um",
+    "sky130_ef_io__com_bus_slice_10um",
+    "sky130_ef_io__com_bus_slice_5um",
+    "sky130_ef_io__com_bus_slice_1um"
+  ],
+  "PAD_PLACE_IO_TERMINALS": [
+    "sky130_ef_io__gpiov2_pad/PAD",
+    "sky130_ef_io__vccd_lvc_pad/VCCD_PAD",
+    "sky130_ef_io__vssd_lvc_pad/VSSD_PAD",
+    "sky130_ef_io__vddio_lvc_pad/VDDIO_PAD",
+    "sky130_ef_io__vssio_lvc_pad/VSSIO_PAD"
+  ],
+  "PAD_WEST": [
+    "pad_vccd1_w",
+    "pad_clk_inst",
+    "pad_reset_inst",
+    "pad_vssd1_w"
+  ],
+  "PAD_SOUTH": [
+    "pad_vddio_s",
+    "pad_spi_sclk_inst",
+    "pad_spi_cs_n_inst",
+    "pad_vssio_s"
+  ],
+  "PAD_EAST": [
+    "pad_vccd1_e",
+    "pad_spi_mosi_inst",
+    "pad_spi_miso_inst",
+    "pad_vssd1_e"
+  ],
+  "PAD_NORTH": [
+    "pad_vddio_n",
+    "pad_vccd1_n",
+    "pad_vssd1_n",
+    "pad_vssio_n"
+  ],
+  "FP_SIZING": "absolute",
+  "DIE_AREA": "0 0 2500 2500",
+  "CORE_AREA": "250 250 2250 2250",
+  "PL_TARGET_DENSITY_PCT": 55,
+  "GPL_CELL_PADDING": 2,
+  "DPL_CELL_PADDING": 2,
+  "RUN_GPL": true,
+  "RUN_CTS": true,
+  "RUN_DPL": true,
+  "PDN_CONNECT_MACROS_TO_GRID": true,
+  "PDN_CORE_RING": true,
+  "PDN_CORE_RING_CONNECT_TO_PADS": false,
+  "PDN_CORE_RING_VWIDTH": 5,
+  "PDN_CORE_RING_HWIDTH": 5,
+  "PDN_CORE_RING_VOFFSET": 0,
+  "PDN_CORE_RING_HOFFSET": 0,
+  "PDN_MACRO_CONNECTIONS": [
+    " .*sram.* vccd1 vssd1 vccd1 vssd1 "
+  ],
+  "FP_PDN_CHECK_CONNECTIVITY": false,
+  "SYNTH_STRATEGY": "AREA 0",
+  "GRT_OVERFLOW_ITERS": 100,
+  "RUN_HEURISTIC_DIODE_INSERTION": true,
+  "HEURISTIC_ANTENNA_THRESHOLD": 300,
+  "RUN_ANTENNA_REPAIR": false,
+  "RUN_IRDROP_REPORT": false,
+  "IGNORE_DISCONNECTED_MODULES": [
+    "sky130_ef_io__gpiov2_pad"
+  ],
+  "DRT_THREADS": 10,
+  "STA_THREADS": 10,
+  "KLAYOUT_DRC_THREADS": 10,
+  "KLAYOUT_XOR_THREADS": 10,
+  "RUN_POST_GPL_DESIGN_REPAIR": true,
+  "RUN_POST_CTS_RESIZER_TIMING": true,
+  "RUN_POST_GRT_RESIZER_TIMING": false,
+  "MAGIC_CAPTURE_ERRORS": false,
+  "RUN_MAGIC_DRC": false,
+  "ERROR_ON_MAGIC_DRC": false,
+  "RUN_MAGIC_WRITE_LEF": false,
+  "RUN_MAGIC_STREAMOUT": false,
+  "PRIMARY_GDSII_STREAMOUT_TOOL": "klayout",
+  "RUN_KLAYOUT_XOR": true,
+  "RUN_LVS": true,
+  "DRT_ANTENNA_REPAIR_ITERS": 2,
+  "KLAYOUT_CONFLICT_RESOLUTION": "OverwriteCell",
+  "meta": {
+    "flow": "Chip",
+    "substituting_steps": {
+      "-Netgen.LVS": "Netgen.PadFix"
+    }
+  },
+  "PDN_CFG": "pdn_cfg_custom.tcl",
+  "PDN_OBSTRUCTIONS": [
+    [
+      "met5",
+      150,
+      555,
+      260,
+      640
+    ],
+    [
+      "met5",
+      2240,
+      555,
+      2350,
+      640
+    ],
+    [
+      "met5",
+      150,
+      1860,
+      260,
+      1940
+    ],
+    [
+      "met5",
+      2240,
+      1860,
+      2350,
+      1940
+    ]
+  ],
+  "ROUTING_OBSTRUCTIONS": [
+    [
+      "met3",
+      197.9,
+      1021.4,
+      202.5,
+      1024.2
+    ],
+    [
+      "met2",
+      199.124,
+      1022.302,
+      200.0,
+      1022.719
+    ],
+    [
+      "met2",
+      199.124,
+      1021.191,
+      199.996,
+      1021.785
+    ],
+    [
+      "met2",
+      1459.9,
+      197.9,
+      1460.7,
+      202.5
+    ]
+  ],
+  "MAGIC_EXT_USE_GDS": false,
+  "MAGIC_EXT_ABSTRACT": true,
+  "ERROR_ON_ILLEGAL_OVERLAPS": false
+}

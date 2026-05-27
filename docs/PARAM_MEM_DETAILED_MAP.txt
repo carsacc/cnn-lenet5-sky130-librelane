@@ -1,0 +1,110 @@
+================================================================================
+GUÍA TÉCNICA DETALLADA: PARAM_MEM_32x2048.hex (INTERLEAVED LAYOUT)
+================================================================================
+Este archivo describe la estructura exacta de la memoria de parámetros optimizada
+para un hardware con 4 unidades MAC en paralelo.
+
+Formato de cada Palabra (32 bits): [ Byte 3 | Byte 2 | Byte 1 | Byte 0 ]
+Direccionamiento: Word-based (0x000 a 0x7FF)
+
+--------------------------------------------------------------------------------
+1. CONFIGURACIÓN GLOBAL (Words 0 - 1)
+--------------------------------------------------------------------------------
+0x000 : Model Input Scale (32-bit float/fixed)
+0x001 : [ 0x00 | 0x00 | General_Right_Shift | Model_Input_Zero_Point ]
+        - Permite leer ambos parámetros de cuantización inicial en un solo ciclo.
+
+--------------------------------------------------------------------------------
+2. CAPA CONV1: 8 Canales Salida (OC), 1 Entrada (IC) (Words 2 - 37)
+--------------------------------------------------------------------------------
+ESTRATEGIA: Intercalado de Canales de Salida (OC Interleaving).
+Propósito: Un píxel de entrada activa 4 filtros simultáneamente.
+
+Pesos (18 Words):
+- 0x002 a 0x00A (9 Words): Pesos del Filtro 0, 1, 2 y 3.
+  Cada word: [ W_k_OC3 | W_k_OC2 | W_k_OC1 | W_k_OC0 ] (k = posición 0..8)
+- 0x00B a 0x013 (9 Words): Pesos del Filtro 4, 5, 6 y 7.
+  Cada word: [ W_k_OC7 | W_k_OC6 | W_k_OC5 | W_k_OC4 ]
+
+Metadatos:
+- 0x014 a 0x01B (8 Words): Bias[0..7] (32-bit signed).
+- 0x01C a 0x023 (8 Words): Requant_Multiplier[0..7] (32-bit signed).
+- 0x024 a 0x025 (2 Words): Output_Zero_Points empaquetados.
+  0x024: [ ZP3 | ZP2 | ZP1 | ZP0 ]
+  0x025: [ ZP7 | ZP6 | ZP5 | ZP4 ]
+
+--------------------------------------------------------------------------------
+3. CAPA CONV2: 16 OC, 8 IC (Words 38 - 361)
+--------------------------------------------------------------------------------
+ESTRATEGIA: Intercalado de Canales de Entrada (IC Interleaving).
+Propósito: Procesar 4 canales de entrada en un solo ciclo para un solo píxel.
+
+Pesos (288 Words):
+- Por cada Canal de Salida (OC 0..15):
+  - 18 Words totales.
+  - Se dividen en 9 pares de Words (uno por cada posición del kernel 3x3).
+  - Word A: [ W_k_IC3 | W_k_IC2 | W_k_IC1 | W_k_IC0 ]
+  - Word B: [ W_k_IC7 | W_k_IC6 | W_k_IC5 | W_k_IC4 ]
+
+Metadatos:
+- 0x146 a 0x155 (16 Words): Bias[0..15].
+- 0x156 a 0x165 (16 Words): Multiplier[0..15].
+- 0x166 a 0x169 (4 Words): ZPs empaquetados (4 por word).
+
+--------------------------------------------------------------------------------
+4. CAPA CONV3: 32 OC, 16 IC (Words 362 - 1585)
+--------------------------------------------------------------------------------
+ESTRATEGIA: Intercalado de Canales de Entrada (IC Interleaving).
+
+Pesos (1152 Words):
+- Por cada OC (32 filtros):
+  - 36 Words totales.
+  - Cada posición del kernel (k=0..8) usa 4 Words para cubrir los 16 ICs.
+  - Word 0: IC 0-3, Word 1: IC 4-7, Word 2: IC 8-11, Word 3: IC 12-15.
+
+Metadatos:
+- 0x5EA a 0x609 (32 Words): Bias.
+- 0x60A a 0x629 (32 Words): Multiplier.
+- 0x62A a 0x631 (8 Words): ZPs empaquetados.
+
+--------------------------------------------------------------------------------
+5. CAPA FC_OUT: 10 Clases, 32 Entradas (GAP) (Words 1586 - 1704)
+--------------------------------------------------------------------------------
+ESTRATEGIA: Intercalado de Salida (OC Interleaving).
+
+Pesos (96 Words):
+- Bloque 0 (OC 0-3): 32 Words. Cada uno trae pesos para 4 neuronas.
+- Bloque 1 (OC 4-7): 32 Words.
+- Bloque 2 (OC 8-9): 32 Words (con padding de 0s en bytes superiores).
+
+Metadatos Finales:
+- 0x692 a 0x69B (10 Words): Bias.
+- 0x69C a 0x6A5 (10 Words): Multiplier.
+- 0x6A6 a 0x6A8 (3 Words): ZPs empaquetados.
+
+--------------------------------------------------------------------------------
+ESTADÍSTICAS DE MEMORIA
+--------------------------------------------------------------------------------
+- Espacio Usado: 1705 / 2048 Words.
+- Utilización: 83.2%
+- Espacio Libre: 343 Words (disponibles al final de la memoria).
+================================================================================
+
+--------------------------------------------------------------------------------
+RESUMEN DE OCUPACIÓN
+--------------------------------------------------------------------------------
+- Metadatos Globales: 2 Words
+- CONV1: ~40 Words
+- CONV2: ~325 Words
+- CONV3: ~1225 Words
+- FC: ~120 Words
+TOTAL ESTIMADO: ~1712 Words / 2048 disponibles (83% de uso).
+ESPACIO LIBRE: ~336 Words (Para futuros parámetros o ajustes).
+
+--------------------------------------------------------------------------------
+FLUJO DEL ORQUESTADOR (HARDWARE)
+--------------------------------------------------------------------------------
+1. Leer Palabra de Pesos (32-bit).
+2. Los 4 bytes se reparten a 4 Multiplicadores.
+3. El Bus de Activación entrega 1 byte (en CONV1/FC) o 4 bytes (en CONV2/3).
+4. El cálculo ocurre en paralelo, reduciendo los ciclos totales en un factor de 4.

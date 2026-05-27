@@ -1,0 +1,27 @@
+# Project wrapper for Magic extraction.
+#
+# LibreLane normally reads either the complete chip GDS or a DEF/LEF view.
+# For LVS we want a hybrid view: keep the top-level design and macros from
+# DEF/LEF, but load the concrete IO pad GDS cells before reading the DEF.
+
+source /home/carsacc/.ciel/ciel/sky130/versions/8afc8346a57fe1ab7934ba5a6056ea8b43078e71/sky130A/libs.tech/magic/sky130A.magicrc
+
+set ::cnn_top_stock_extract_spice "/nix/store/4ih3gsigr3b9bd23wa17npi2ivyrcbnd-python3-3.13.9-env/lib/python3.13/site-packages/librelane/scripts/magic/extract_spice.tcl"
+set ::cnn_top_hybrid_extract_spice "/home/carsacc/ASIC/designs/CNN_LeNet5_Verilog_implementation/librelane_flow/cnn_top/magic_extract_spice_pads_gds.tcl"
+
+if {![info exists ::cnn_top_magic_source_intercept_installed]} {
+    set ::cnn_top_magic_source_intercept_installed 1
+    rename source ::cnn_top_original_source
+
+    proc source {args} {
+        set path [lindex $args end]
+        set requested [file normalize $path]
+        set stock_extract [file normalize $::cnn_top_stock_extract_spice]
+
+        if {[llength $args] == 1 && $requested == $stock_extract} {
+            return [uplevel 1 [list ::cnn_top_original_source $::cnn_top_hybrid_extract_spice]]
+        }
+
+        return [uplevel 1 [list ::cnn_top_original_source {*}$args]]
+    }
+}

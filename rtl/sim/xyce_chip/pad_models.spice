@@ -1,0 +1,88 @@
+* pad_models.spice — Behavioral SPICE models for sky130_ef_io pads
+* For Xyce transistor-level simulation of chip_top_spi
+* These provide pass-through behavior without full analog pad circuitry
+*
+* GPIO: IN = PAD (input buffer), PAD = OUT when OE_N=0 (output driver)
+* Power/Corner/Filler: passive (no function needed in sim)
+
+* =========================================================================
+* GPIO pad — bidirectional I/O (behavioral)
+* Port order MUST match Magic-extracted chip netlist
+* =========================================================================
+.SUBCKT sky130_ef_io__gpiov2_pad AMUXBUS_A AMUXBUS_B ANALOG_EN ANALOG_POL ANALOG_SEL
++ DM[2] DM[1] DM[0] ENABLE_H ENABLE_INP_H ENABLE_VDDA_H ENABLE_VDDIO ENABLE_VSWITCH_H
++ HLD_H_N HLD_OVR IB_MODE_SEL IN IN_H INP_DIS OE_N OUT PAD PAD_A_ESD_0_H PAD_A_ESD_1_H
++ PAD_A_NOESD_H SLOW TIE_HI_ESD TIE_LO_ESD VCCD VCCHIB VDDA VDDIO VDDIO_Q VSSA VSSD
++ VSSIO VSSIO_Q VSWITCH VTRIP_SEL
+
+* Input buffer: IN follows PAD
+Bin IN 0 V={V(PAD)}
+Binh IN_H 0 V={V(PAD)}
+
+* Output driver: when OE_N < 0.9V, drive PAD = OUT (through 50 ohm)
+* For input pads (OE_N=VDD): follows PAD (no conflict with testbench Vsrc)
+* For output pads (OE_N=0): drives PAD to OUT value
+Rout pad_drv PAD 50
+Bout pad_drv 0 V={IF(V(OE_N)<0.9, V(OUT), V(PAD))}
+
+* Load cap on PAD for convergence
+Cpad PAD 0 0.5p
+
+* Tie-off outputs (constant HI/LO rails)
+Rtiehi TIE_HI_ESD VCCD 0.1
+Rtielo TIE_LO_ESD VSSD 0.1
+
+.ENDS sky130_ef_io__gpiov2_pad
+
+* =========================================================================
+* Power pads — passive (connect pad pin to internal rail)
+* =========================================================================
+.SUBCKT sky130_ef_io__vccd_lvc_pad AMUXBUS_A AMUXBUS_B DRN_LVC1 DRN_LVC2 SRC_BDY_LVC1
++ SRC_BDY_LVC2 BDY2_B2B VCCD_PAD VSSA VDDA VSWITCH VDDIO_Q VCCHIB VDDIO VCCD VSSIO
++ VSSD VSSIO_Q
+Rconn VCCD_PAD VCCD 0.01
+.ENDS
+
+.SUBCKT sky130_ef_io__vssd_lvc_pad AMUXBUS_A AMUXBUS_B DRN_LVC1 DRN_LVC2 SRC_BDY_LVC1
++ SRC_BDY_LVC2 BDY2_B2B VSSD_PAD VSSA VDDA VSWITCH VDDIO_Q VCCHIB VDDIO VCCD VSSIO
++ VSSD VSSIO_Q
+Rconn VSSD_PAD VSSD 0.01
+.ENDS
+
+.SUBCKT sky130_ef_io__vddio_lvc_pad AMUXBUS_A AMUXBUS_B DRN_LVC1 DRN_LVC2 SRC_BDY_LVC1
++ SRC_BDY_LVC2 BDY2_B2B VDDIO_PAD VSSA VDDA VSWITCH VDDIO_Q VCCHIB VDDIO VCCD VSSIO
++ VSSD VSSIO_Q
+Rconn VDDIO_PAD VDDIO 0.01
+.ENDS
+
+.SUBCKT sky130_ef_io__vssio_lvc_pad AMUXBUS_A AMUXBUS_B DRN_LVC1 DRN_LVC2 SRC_BDY_LVC1
++ SRC_BDY_LVC2 BDY2_B2B VSSIO_PAD VSSA VDDA VSWITCH VDDIO_Q VCCHIB VDDIO VCCD VSSIO
++ VSSD VSSIO_Q
+Rconn VSSIO_PAD VSSIO 0.01
+.ENDS
+
+* =========================================================================
+* Corner pads — passive
+* =========================================================================
+.SUBCKT sky130_ef_io__corner_pad AMUXBUS_A AMUXBUS_B VSSA VDDA VSWITCH VDDIO_Q VCCHIB
++ VDDIO VCCD VSSIO VSSD VSSIO_Q
+.ENDS
+
+* =========================================================================
+* I/O filler cells — passive
+* =========================================================================
+.SUBCKT sky130_ef_io__com_bus_slice_1um AMUXBUS_A AMUXBUS_B VSSA VDDA VSWITCH VDDIO_Q
++ VCCHIB VDDIO VCCD VSSIO VSSD VSSIO_Q
+.ENDS
+
+.SUBCKT sky130_ef_io__com_bus_slice_5um AMUXBUS_A AMUXBUS_B VSSA VDDA VSWITCH VDDIO_Q
++ VCCHIB VDDIO VCCD VSSIO VSSD VSSIO_Q
+.ENDS
+
+.SUBCKT sky130_ef_io__com_bus_slice_10um AMUXBUS_A AMUXBUS_B VSSA VDDA VSWITCH VDDIO_Q
++ VCCHIB VDDIO VCCD VSSIO VSSD VSSIO_Q
+.ENDS
+
+.SUBCKT sky130_ef_io__com_bus_slice_20um AMUXBUS_A AMUXBUS_B VSSA VDDA VSWITCH VDDIO_Q
++ VCCHIB VDDIO VCCD VSSIO VSSD VSSIO_Q
+.ENDS
