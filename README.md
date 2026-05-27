@@ -82,7 +82,7 @@ Los `runs/` no se versionan por tamaño pero son reproducibles bit a bit con los
 ### Dependencias
 
 - Linux x86_64 con Python 3.10+, Make, Git e Icarus Verilog instalados.
-- **Nix** para entrar al `nix-shell` de LibreLane.
+- **Nix** para entrar al `nix-shell` de LibreLane (`sh <(curl -L https://nixos.org/nix/install)`).
 - **LibreLane v3.0.0** clonado en local (`git clone --branch 3.0.0 https://github.com/librelane/librelane.git`).
 
 ### Pasos
