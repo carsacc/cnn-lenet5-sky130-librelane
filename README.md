@@ -8,11 +8,21 @@ Repositorio público asociado al Trabajo Fin de Máster.
 >
 > **Tutores.** Ricardo Carmona Galán · José Manuel de la Rosa Utrera
 >
+> **Universidad.** Universidad de Sevilla
+>
 > **Máster Universitario en Microelectrónica.** Diseño y Aplicaciones de Sistemas Micro/Nanométricos
 >
 > **Fecha.** Mayo de 2026
+>
+> **Memoria.** [`docs/tfm.pdf`](docs/tfm.pdf)
 
 El proyecto recorre el flujo completo **RTL-to-GDSII** sobre el PDK abierto **SkyWater sky130A** utilizando exclusivamente herramientas libres orquestadas por **LibreLane v3.0.0**. El caso de estudio es un acelerador hardware para clasificación de dígitos MNIST que implementa una variante cuantizada de la red **LeNet-5** (INT8).
+
+<p align="center">
+  <img src="docs/images/spi-chip-hier-28_final.png" alt="Chip integrado spi-chip-hier-28, núcleo endurecido sobre padring sky130" width="55%">
+  <br>
+  <em>Layout final del chip integrado (run <code>spi-chip-hier-28</code>): núcleo SPI endurecido en el centro, anillo de pads sky130 y conexiones PDN core-padring.</em>
+</p>
 
 ## Resumen del diseño
 
@@ -49,15 +59,15 @@ rtl/
   sim/            Scripts de simulación (RTL, GLS post-synth, GLS post-PnR, SDF)
 python/           Entrenamiento, cuantización PTQ INT8, golden model, empaquetado de hex
 datos_hex_std/    Salida del flujo Python (regenerable, no se versiona)
-docs/             Datasheet del acelerador y documentos técnicos
+docs/             Datasheet del acelerador, documentos técnicos e imágenes
 librelane_flow/
   cnn_top/        Configs JSON, SDC multi-corner y Tcl custom (PDN, padring)
-    runs/         Runs físicos cerrados incluidos en el repo
+  shift-reg/      Flujo de prueba (shift register de 8 bits) para validar el toolchain
 requirements.txt  Dependencias Python del flujo offline
-Makefile          Targets de regresión RTL/GLS y flujo Python
+Makefile          Targets de regresión RTL/GLS y flujo físico
 ```
 
-### Runs físicos incluidos
+### Runs físicos canónicos del TFM
 
 | Run | Variante | Descripción |
 |---|---|---|
@@ -65,7 +75,7 @@ Makefile          Targets de regresión RTL/GLS y flujo Python
 | `obi-hardened-2` | core OBI | Cierre físico del núcleo con interfaz OBI (entregable SoC-ready) |
 | `spi-chip-hier-28` | chip integrado | Núcleo SPI endurecido + padring custom, flujo jerárquico |
 
-Los runs adicionales generados durante el TFM no se distribuyen por tamaño pero son reproducibles con los comandos descritos abajo.
+Los `runs/` no se versionan por tamaño pero son reproducibles bit a bit con los targets `make librelane-*` (ver más abajo).
 
 ## Reproducción del flujo
 
@@ -92,40 +102,57 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# 4. Flujo Python (entrenamiento + cuantización + generación de hex y golden)
+# 4. Flujo Python (entrenamiento + cuantización + hex de parámetros y golden)
 make train
 make gen-hex
 
-# 5. Regresión RTL (testbenches unitarios + top-level OBI y SPI)
+# 5. Regresión RTL completa (unitarios + top-level OBI/SPI)
 make sim-all
 
-# 6. Cierre físico del núcleo (variante SPI, deliverable del chip)
-nix-shell <ruta/al/repo/librelane>
-librelane librelane_flow/cnn_top/config_core_spi.json   # dentro de nix-shell
+# 6. Entrar al ambiente Nix para LibreLane y los GLS
+nix-shell ~/ASIC/tools/librelane
 
-# 7. GLS post-PnR funcional sobre el run anterior (SPI por defecto)
-make gls-postpnr RUN=spi-hardened-5
+# 7. Cierre físico del core SPI (deliverable del chip)
+make librelane-spi-hardened-5
+# equivalente: librelane librelane_flow/cnn_top/config_core_spi.json \
+#                        --run-tag spi-hardened-5
 
-# 8. Cierre físico del chip integrado con padring
-librelane librelane_flow/cnn_top/config_chip_hier.json  # dentro de nix-shell
+# 8. Cierre físico opcional del core OBI
+make librelane-obi-hardened-2
+
+# 9. GLS funcional sobre el run anterior (TB SPI por defecto)
+make gls-postsynth RUN=spi-hardened-5             # post-síntesis
+make gls-postpnr   RUN=spi-hardened-5             # post-PnR
+make gls-sdf       RUN=spi-hardened-5 CORNER=tt   # post-PnR + SDF
+
+# 10. Cierre físico del chip integrado con padring
+make librelane-spi-chip-hier-28
+# equivalente: librelane librelane_flow/cnn_top/config_chip_hier.json \
+#                        --run-tag spi-chip-hier-28
 ```
 
-La regeneración de las macros SRAM con OpenRAM y Xyce no es necesaria para reproducir el flujo. El repositorio ya incluye las vistas firmadas (`.lib`, `.lef`, `.gds`, `.sp`); la caracterización completa tarda varios días en un servidor de cálculo.
+El `--run-tag` de los pasos 7 y 10 es obligatorio: `config_chip_hier.json` referencia explícitamente los artefactos en `runs/spi-hardened-5/final/...`, por lo que el chip-hier sólo se cierra si el core SPI se endureció con ese tag exacto. Los targets `make librelane-*` encapsulan los tags canónicos.
 
-### Targets útiles del Makefile
+La regeneración de las macros SRAM con OpenRAM y Xyce no es necesaria para reproducir el flujo. El repositorio incluye las vistas firmadas (`.lib`, `.lef`, `.gds`, `.sp`); la caracterización completa tarda varios días en un servidor de cálculo.
+
+### Targets del Makefile
 
 | Target | Descripción |
 |---|---|
 | `make check-env` | Comprueba herramientas, PDK y SRAM macros |
-| `make sim-unit` | Lanza los 14 testbenches unitarios |
+| `make sim-unit` | Lanza los testbenches unitarios |
 | `make sim-obi` | Top-level RTL via OBI (`NUM_IMAGES=3` por defecto) |
 | `make sim-spi` | Top-level RTL via SPI |
 | `make sim-all` | Regresión RTL completa (unitarios + top-level) |
 | `make gls-postsynth RUN=<run>` | GLS post-síntesis con testbench SPI |
-| `make gls-postpnr RUN=<run>` | GLS post-PnR funcional con testbench SPI |
 | `make gls-postsynth-obi RUN=<run>` | Variante OBI del GLS post-síntesis |
+| `make gls-postpnr RUN=<run>` | GLS post-PnR funcional con testbench SPI |
 | `make gls-postpnr-obi RUN=<run>` | Variante OBI del GLS post-PnR |
 | `make gls-sdf RUN=<run> CORNER=tt` | GLS post-PnR con anotación SDF (CVC64) |
+| `make librelane-spi-hardened-5` | Endurece el core SPI (run-tag `spi-hardened-5`) |
+| `make librelane-obi-hardened-2` | Endurece el core OBI (run-tag `obi-hardened-2`) |
+| `make librelane-spi-chip-hier-28` | Endurece el chip integrado (depende del core SPI) |
+| `make librelane-shift-reg` | Flujo de prueba (shift register 8 bits) |
 | `make train` | Entrenamiento + cuantización + export hex + golden |
 | `make gen-hex` | Empaqueta los hex de parámetros en `PARAM_MEM_32x2048.hex` |
 
@@ -149,6 +176,7 @@ La regeneración de las macros SRAM con OpenRAM y Xyce no es necesaria para repr
 
 ## Documentación adicional
 
+- [`docs/tfm.pdf`](docs/tfm.pdf) — Memoria completa del TFM (PDF).
 - [`docs/CNN_ACCELERATOR_DATASHEET.md`](docs/CNN_ACCELERATOR_DATASHEET.md) — Datasheet interno del acelerador (módulos, mapas de memoria, timing, cuantización).
 - [`docs/PARAM_MEM_DETAILED_MAP.txt`](docs/PARAM_MEM_DETAILED_MAP.txt) — Mapa detallado de la Param Memory.
 - [`docs/TB_CNN_TOP_FULL_GUIDE.md`](docs/TB_CNN_TOP_FULL_GUIDE.md) — Guía del testbench top-level.
